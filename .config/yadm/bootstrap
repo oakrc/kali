@@ -31,11 +31,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # Pentesting tools (and upgrade existing)
 apt install -qy gobuster dirsearch rlwrap shellter kerberoast seclists nishang ncat radare2 gdb rustscan guake searchsploit wpscan nikto
 
-# apt install wine wine32 mingw-w64
-
 # ====================
-# Set up yadm
+# Adjust timezone
 # ====================
+echo "TZ='America/Los_Angeles'; export TZ" >> ~/.profile
 
 # ====================
 # Set up fish
@@ -106,12 +105,7 @@ nvim -c 'COQdeps' -es
 nvim -c 'PackerSnapshot initial' -es
 
 # ====================
-# Adjust timezone
-# ====================
-echo "TZ='America/Los_Angeles'; export TZ" >> ~/.profile
-
-# ====================
-# gdb / pwndbg
+# Set up gdb / pwndbg
 # ====================
 $pwndbg=$user/re/src/pwndbg
 git clone https://github.com/pwndbg/pwndbg $pwndbg
