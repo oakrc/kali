@@ -16,7 +16,8 @@ alias m math
 alias swp "sudo swapoff -a && sudo swapon -a"
 alias wg "wget --hsts-file /dev/null"
 alias ys "yadm s"
-alias ya "yadm au"
+alias ya "yadm a"
+alias yau "yadm au"
 alias yp "yadm pl"
 alias yd "yadm dc"
 alias sp /usr/bin/python3

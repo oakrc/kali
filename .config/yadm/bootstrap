@@ -25,7 +25,7 @@ sudo -u kali mkdir $user/tmp
 export DEBIAN_FRONTEND=noninteractive
 apt update
 # My tools
-apt install -qy neovim fish fzf exa syncthing flameshot pyenv ncdu bfs python3-venv sqlite3 nodejs npm jq
+apt install -qy neovim fish fzf exa flameshot pyenv ncdu bfs python3-venv sqlite3 nodejs npm jq
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Pentesting tools (and upgrade existing)
@@ -50,13 +50,14 @@ fish -c 'omf update'
 syncthing_latest=$(curl https://syncthing.net/downloads/ | grep -Po 'https://github.com/.*linux-amd64.*tar.gz')
 curl -o syncthing.tar.gz $syncthing_latest
 tar xf syncthing.tar.gz
-cd syncthing-*
+pushd syncthing-*
 mkdir -p /usr/local/bin
 install -Dm555 syncthing /usr/local/bin/syncthing
 install -Dm644 etc/linux-systemd/user/syncthing.service /etc/systemd/user/syncthing.service
 sudo -u kali systemctl --user enable --now syncthing
 spd-say 'Set up Syncthing'
 open 'http://localhost:8384'
+popd
 
 # ====================
 # Set up flameshot
@@ -108,3 +109,14 @@ nvim -c 'PackerSnapshot initial' -es
 # Adjust timezone
 # ====================
 echo "TZ='America/Los_Angeles'; export TZ" >> ~/.profile
+
+# ====================
+# gdb / pwndbg
+# ====================
+$pwndbg=$user/re/src/pwndbg
+git clone https://github.com/pwndbg/pwndbg $pwndbg
+pushd $pwndbg
+sudo -u kali ./setup.sh
+echo 'set disassembly-flavor intel' >> $user/.gdbinit
+popd
+
