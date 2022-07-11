@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ ! $(whoami) = root ]; then
+    echo 'Elevating privilege...'
+    sudo bash $0
+    exit
+fi
+
+TMP=$(mktemp -d)
+trap "rm -rf $TMP" EXIT
+pushd $TMP
+
+# ====================
+# Set up directories
+# ====================
+user=/home/kali
+sudo -u kali mkdir -p $user/re/dev
+sudo -u kali mkdir $user/re/src
+sudo -u kali mkdir $user/tmp
+
+# ====================
+# Install necessities
+# ====================
+export DEBIAN_FRONTEND=noninteractive
+apt update
+# My tools
+apt install -qy neovim fish fzf exa syncthing flameshot pyenv ncdu bfs python3-venv sqlite3 nodejs npm jq
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Pentesting tools (and upgrade existing)
+apt install -qy gobuster dirsearch rlwrap shellter kerberoast seclists nishang ncat radare2 gdb rustscan guake searchsploit wpscan nikto
+
+# apt install wine wine32 mingw-w64
+
+# ====================
+# Set up yadm
+# ====================
+
+# ====================
+# Set up fish
+# ====================
+chsh -s /usr/bin/fish kali
+curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+fish -c 'omf update'
+
+# ====================
+# Set up syncthing
+# ====================
+syncthing_latest=$(curl https://syncthing.net/downloads/ | grep -Po 'https://github.com/.*linux-amd64.*tar.gz')
+curl -o syncthing.tar.gz $syncthing_latest
+tar xf syncthing.tar.gz
+cd syncthing-*
+mkdir -p /usr/local/bin
+install -Dm555 syncthing /usr/local/bin/syncthing
+install -Dm644 etc/linux-systemd/user/syncthing.service /etc/systemd/user/syncthing.service
+sudo -u kali systemctl --user enable --now syncthing
+spd-say 'Set up Syncthing'
+open 'http://localhost:8384'
+
+# ====================
+# Set up flameshot
+# ====================
+xfconf-query -c xfce4-keyboard-shortcuts -n -t 'string' -p '/commands/custom/<Shift><Super>s' -s 'flameshot gui'
+
+# ====================
+# Set up metasploit
+# ====================
+systemctl enable --now postgresql
+msfdb init
+
+# ====================
+# Set up git
+# ====================
+name='theoaktree1040'
+git config --global user.name 'Zhenkai Weng'
+git config --global user.email "$name@gmail.com"
+spd-say 'Enter SSH passphrase'
+ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519
+
+# ====================
+# Set up obsidian
+# ====================
+obsidian_latest=$(curl https://obsidian.md/ | tee | grep -Po 'https://.*AppImage' -m 1)
+curl -o obsidian $obsidian_latest
+install -Dm755 obsidian /usr/local/bin/obsidian
+
+# ====================
+# Set up guake
+# ====================
+# TODO: guake: add keyboard shortcut Ctrl-G
+# TODO: guake: autostart
+# TODO: guake: set colorscheme to nord
+
+# ====================
+# Set up neovim
+# ====================
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+install -Dm755 nvim.appimage /usr/local/bin/nvim
+packer_url='https://github.com/wbthomason/packer.nvim'
+packer_dst='~/.local/share/nvim/site/pack/packer/start/packer.nvim'
+git clone --depth 1 $packer_url $packer_dst
+nvim -c 'PackerSync' -es
+nvim -c 'COQdeps' -es
+nvim -c 'PackerSnapshot initial' -es
+
+# ====================
+# Adjust timezone
+# ====================
+echo "TZ='America/Los_Angeles'; export TZ" >> ~/.profile

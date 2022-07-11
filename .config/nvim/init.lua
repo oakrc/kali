@@ -1,0 +1,6 @@
+require('config.options')
+require('config.plugins')
+require('config.keymaps')
+require('config.misc')
+require('config.filetypes')
+require('config.statusline')
