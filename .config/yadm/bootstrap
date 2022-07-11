@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ ! $(whoami) = root ]; then
-    echo 'Elevating privilege...'
-    sudo bash $0
-    exit
-fi
+sudo echo 'Thanks'
 
 TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
@@ -14,22 +10,21 @@ pushd $TMP
 # ====================
 # Set up directories
 # ====================
-user=/home/kali
-sudo -u kali mkdir -p $user/re/dev
-sudo -u kali mkdir $user/re/src
-sudo -u kali mkdir $user/tmp
+mkdir -p ~/re/dev
+mkdir ~/re/src
+mkdir ~/tmp
 
 # ====================
 # Install necessities
 # ====================
 export DEBIAN_FRONTEND=noninteractive
-apt update
+sudo apt update
 # My tools
-apt install -qy neovim fish fzf exa flameshot pyenv ncdu bfs python3-venv sqlite3 nodejs npm jq
+sudo apt install -qy neovim fish fzf exa flameshot pyenv ncdu bfs python3-venv sqlite3 nodejs npm jq
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Pentesting tools (and upgrade existing)
-apt install -qy gobuster dirsearch rlwrap shellter kerberoast seclists nishang ncat radare2 gdb rustscan guake searchsploit wpscan nikto
+sudo apt install -qy gobuster dirsearch rlwrap shellter kerberoast seclists nishang ncat radare2 gdb rustscan guake searchsploit wpscan nikto
 
 # ====================
 # Adjust timezone
@@ -50,10 +45,9 @@ syncthing_latest=$(curl https://syncthing.net/downloads/ | grep -Po 'https://git
 curl -o syncthing.tar.gz $syncthing_latest
 tar xf syncthing.tar.gz
 pushd syncthing-*
-mkdir -p /usr/local/bin
-install -Dm555 syncthing /usr/local/bin/syncthing
-install -Dm644 etc/linux-systemd/user/syncthing.service /etc/systemd/user/syncthing.service
-sudo -u kali systemctl --user enable --now syncthing
+sudo install -D syncthing /usr/local/bin/syncthing
+sudo install -Dm644 etc/linux-systemd/user/syncthing.service /etc/systemd/user/syncthing.service
+systemctl --user enable --now syncthing
 spd-say 'Set up Syncthing'
 open 'http://localhost:8384'
 popd
@@ -66,15 +60,14 @@ xfconf-query -c xfce4-keyboard-shortcuts -n -t 'string' -p '/commands/custom/<Sh
 # ====================
 # Set up metasploit
 # ====================
-systemctl enable --now postgresql
-msfdb init
+sudo systemctl enable --now postgresql
+sudo msfdb init
 
 # ====================
 # Set up git
 # ====================
-name='theoaktree1040'
 git config --global user.name 'Zhenkai Weng'
-git config --global user.email "$name@gmail.com"
+git config --global user.email 'theoaktree1040@gmail.com'
 spd-say 'Enter SSH passphrase'
 ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519
 
@@ -83,7 +76,7 @@ ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519
 # ====================
 obsidian_latest=$(curl https://obsidian.md/ | tee | grep -Po 'https://.*AppImage' -m 1)
 curl -o obsidian $obsidian_latest
-install -Dm755 obsidian /usr/local/bin/obsidian
+sudo install obsidian /usr/local/bin/obsidian
 
 # ====================
 # Set up guake
@@ -96,7 +89,7 @@ install -Dm755 obsidian /usr/local/bin/obsidian
 # Set up neovim
 # ====================
 curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
-install -Dm755 nvim.appimage /usr/local/bin/nvim
+sudo install nvim.appimage /usr/local/bin/nvim
 packer_url='https://github.com/wbthomason/packer.nvim'
 packer_dst='~/.local/share/nvim/site/pack/packer/start/packer.nvim'
 git clone --depth 1 $packer_url $packer_dst
@@ -110,7 +103,7 @@ nvim -c 'PackerSnapshot initial' -es
 $pwndbg=$user/re/src/pwndbg
 git clone https://github.com/pwndbg/pwndbg $pwndbg
 pushd $pwndbg
-sudo -u kali ./setup.sh
-echo 'set disassembly-flavor intel' >> $user/.gdbinit
+./setup.sh
+echo 'set disassembly-flavor intel' >> ~/.gdbinit
 popd
 
